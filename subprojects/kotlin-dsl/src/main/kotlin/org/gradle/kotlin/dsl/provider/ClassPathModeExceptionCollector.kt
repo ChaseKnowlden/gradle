@@ -16,15 +16,16 @@
 package org.gradle.kotlin.dsl.provider
 
 import org.gradle.internal.concurrent.Stoppable
+import org.gradle.internal.service.scopes.ExceptionCollector
 
 
-open class ClassPathModeExceptionCollector : Stoppable {
+open class ClassPathModeExceptionCollector(val collector: ExceptionCollector) : Stoppable {
 
     private
     val collection = mutableListOf<Exception>()
 
     val exceptions: List<Exception>
-        get() = collection
+        get() = collection + collector.exceptions
 
     fun collect(error: Exception) {
         collection.add(error)
