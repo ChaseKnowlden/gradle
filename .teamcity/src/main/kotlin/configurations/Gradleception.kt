@@ -92,20 +92,22 @@ fun String.singlePatternToFindCommandRegex(): String {
     return "-regex '$regex'"
 }
 
-fun gradleceptionFindCommand(dir: String, patterns: List<String>): String {
+fun gradleceptionFindCommand(patterns: List<String>): String {
     if (patterns.isEmpty()) {
-        return "find $dir -type f"
+        return "find . -type f"
     } else {
-        return "find $dir -type f \\( ${patterns.joinToString(" -o ") { it.singlePatternToFindCommandRegex() }} \\)"
+        return "find . -type f \\( ${patterns.joinToString(" -o ") { it.singlePatternToFindCommandRegex() }} \\)"
     }
 }
 
 fun BuildSteps.calculateMd5AndSetEnvStep(stepName: String, dir: String, patterns: List<String> = emptyList()) {
     script {
         name = stepName
+        workingDir = dir
         scriptContent = """
                 set -x
-                MD5=`${gradleceptionFindCommand(dir, patterns)} | sort | xargs md5sum | md5sum | awk '{ print ${'$'}1 }'`
+                FILES=`${gradleceptionFindCommand(patterns)}`
+                MD5=`echo ${'$'}FILES | sort | xargs md5sum | md5sum | awk '{ print ${'$'}1 }'`
                 echo "##teamcity[setParameter name='env.ORG_GRADLE_PROJECT_versionQualifier' value='gradleception-${'$'}MD5']"
             """.trimIndent()
     }
