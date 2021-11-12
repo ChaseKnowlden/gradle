@@ -51,7 +51,7 @@ class JavaCompileToolchainIntegrationTest extends AbstractPluginIntegrationTest 
 
         where:
         type           | jdk
-        'differentJdk' | AvailableJavaHomes.getDifferentJdk()
+        'differentJdk' | AvailableJavaHomes.differentJdk
         'current'      | Jvm.current()
     }
 
