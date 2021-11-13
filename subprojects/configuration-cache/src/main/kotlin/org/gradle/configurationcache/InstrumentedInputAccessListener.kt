@@ -79,4 +79,8 @@ class InstrumentedInputAccessListener(
         }
         broadcast.envVariableRead(key, value, consumer)
     }
+
+    override fun externalProcessStarted(command: String?, consumer: String?) {
+        println("Calling $command from $consumer")
+    }
 }
