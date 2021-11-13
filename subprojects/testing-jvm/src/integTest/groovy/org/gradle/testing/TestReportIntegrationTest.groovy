@@ -91,7 +91,7 @@ public class LoggingTest {
         super.sample(sample)
 
         when:
-        run "testReport"
+        run "testReport", '-i'
 
         then:
         def htmlReport = new HtmlTestExecutionResult(sample.dir, "build/reports/allTests")
@@ -104,7 +104,7 @@ public class LoggingTest {
         ignoreWhenJupiter()
         buildFile << """
 $junitSetup
-test {
+tasks.named('test', Test).configure {
     ignoreFailures true
     useJUnit {
         excludeCategories 'org.gradle.testing.SuperClassTests'
@@ -112,7 +112,7 @@ test {
     }
 }
 
-task superTest(type: Test) {
+tasks.register('superTest', Test) {
     ignoreFailures true
     systemProperty 'category', 'super'
     useJUnit {
@@ -120,7 +120,7 @@ task superTest(type: Test) {
     }
 }
 
-task subTest(type: Test) {
+tasks.register('subTest', Test) {
     ignoreFailures true
     systemProperty 'category', 'sub'
     useJUnit {
@@ -128,11 +128,12 @@ task subTest(type: Test) {
     }
 }
 
-task testReport(type: TestReport) {
+def testReport = tasks.register('testReport', TestReport) {
     destinationDir = file("\$buildDir/reports/allTests")
     reportOn test, superTest, subTest
-    tasks.build.dependsOn testReport
 }
+
+tasks.named('build').configure { it.dependsOn testReport }
 """
 
         and:
@@ -203,14 +204,14 @@ public class SubClassTests extends SuperClassTests {
 
              $junitSetup
 
-            task otherTests(type: Test) {
+            tasks.register('otherTests', Test) {
                 binaryResultsDirectory = file("bin")
                 testClassesDirs = files("blah")
             }
 
-            task testReport(type: TestReport) {
+            tasks.register('testReport', TestReport) {
                 reportOn test, otherTests
-                destinationDir reporting.file("tr")
+                destinationDir = reporting.file("tr")
             }
         """
 
@@ -234,9 +235,9 @@ public class SubClassTests extends SuperClassTests {
 
              $junitSetup
 
-            task testReport(type: TestReport) {
-                testResultDirs = [test.binaryResultsDirectory.asFile.get()]
-                destinationDir reporting.file("tr")
+            tasks.register('testReport', TestReport) {
+                testResultDirs.from = test.binaryResultsDirectory.asFile.get()
+                destinationDir = reporting.file("tr")
             }
         """
 
@@ -253,9 +254,9 @@ public class SubClassTests extends SuperClassTests {
         buildScript """
             apply plugin: 'java'
 
-            task testReport(type: TestReport) {
+            tasks.register('testReport', TestReport) {
                 reportOn test
-                destinationDir reporting.file("tr")
+                destinationDir = reporting.file("tr")
             }
         """
 
